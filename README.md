@@ -1,6 +1,6 @@
 # cman
 
-cman is a configurable two-level cache (for caching Objects).
+cman is a configurable two-level cache manager (for caching Objects).
 
 It has two levels:
 * level 1: memory cache;
