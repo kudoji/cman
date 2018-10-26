@@ -2,17 +2,18 @@ package com.kudoji.cman.cache;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * First level is memory
  * Second level is file system
  */
-public class TwoLevelCache implements Cache{
+public class TwoLevelCache<K, V> implements Cache<K, V>{
     /**
      *
      */
-    private MemoryCache mc;
-    private FileCache fc;
+    private final MemoryCache<K, V> mc;
+    private final FileCache<K, V> fc;
 
     /**
      * Cache strategies as follows:
@@ -49,20 +50,20 @@ public class TwoLevelCache implements Cache{
      * Default constructor
      */
     public TwoLevelCache(){
-        this.mc = new MemoryCache();
+        this.mc = new MemoryCache<>();
         this.mc.setMaxSize(0);
 
-        this.fc = new FileCache();
+        this.fc = new FileCache<>();
         this.fc.setMaxSize(0);
 
         this.cacheStrategy = CacheStrategy.FREQUENTTOMEMORY;
     }
 
     public TwoLevelCache(CacheStrategy cacheStrategy){
-        this.mc = new MemoryCache();
+        this.mc = new MemoryCache<>();
         this.mc.setMaxSize(0);
 
-        this.fc = new FileCache();
+        this.fc = new FileCache<>();
         this.fc.setMaxSize(0);
 
         this.cacheStrategy = cacheStrategy;
@@ -75,7 +76,7 @@ public class TwoLevelCache implements Cache{
      * @return true if object put either to memory or file cache, false otherwise
      */
     @Override
-    public boolean put(String key, Object object) {
+    public boolean put(K key, V object) {
         boolean result = false;
 
         result = this.mc.put(key, object);
@@ -88,14 +89,28 @@ public class TwoLevelCache implements Cache{
         return result;
     }
 
+    @Override
+    public boolean put(CacheObject<K, V> cacheObject){
+        boolean result = false;
+
+        result = this.mc.put(cacheObject);
+
+        if (!result){
+            //  memory cache is full, try file cache
+            result = this.fc.put(cacheObject);
+        }
+
+        return result;
+    }
+
     /**
      * Retrieve object by key. First checks value in memory cache. If fails, tries file cache
      * @param key
      * @return null if object is not found in both caches, real object otherwise
      */
     @Override
-    public Object get(String key) {
-        Object result = null;
+    public V get(K key) {
+        V result = null;
 
         //  check memory cache first
         result = this.mc.get(key);
@@ -114,7 +129,7 @@ public class TwoLevelCache implements Cache{
      * @return false if value is not found in both caches, true in case value deleted from one of the caches
      */
     @Override
-    public boolean delete(String key) {
+    public boolean delete(K key) {
         boolean result = false;
 
         result = this.mc.delete(key);
@@ -202,8 +217,9 @@ public class TwoLevelCache implements Cache{
      *
      * @return
      */
-    public ArrayList<CacheObject> getAll(){
-        ArrayList<CacheObject> result;
+    @Override
+    public List<CacheObject<K, V>> getAll(){
+        List<CacheObject<K, V>> result;
 
         result = this.mc.getAll();
         result.addAll(this.fc.getAll());
@@ -218,27 +234,28 @@ public class TwoLevelCache implements Cache{
      * @param key
      * @return
      */
-    public boolean isKeyPresent(String key){
+    @Override
+    public boolean isKeyPresent(K key){
         return (this.mc.isKeyPresent(key) || this.fc.isKeyPresent(key));
     }
 
-    public long getAge(String key){
+    @Override
+    public long getAge(K key){
         long cacheObjectAge = this.mc.getAge(key);
 
         if (cacheObjectAge == -1){
             return this.fc.getAge(key);
-
         }
 
         return cacheObjectAge;
     }
 
-    public int getFrequency(String key){
+    @Override
+    public int getFrequency(K key){
         int cacheObjectFrequency = this.mc.getFrequency(key);
 
         if (cacheObjectFrequency == -1){
             return this.fc.getFrequency(key);
-
         }
 
         return cacheObjectFrequency;
@@ -249,7 +266,7 @@ public class TwoLevelCache implements Cache{
      * @param key
      * @return
      */
-    public ObjectLocation getLocation(String key){
+    public ObjectLocation getLocation(K key){
         if (this.mc.isKeyPresent(key)){
             return ObjectLocation.MEMORY;
         }else if (this.fc.isKeyPresent(key)){
@@ -296,7 +313,7 @@ public class TwoLevelCache implements Cache{
      * Moves frequent objects to file cache
      */
     private void applyFrequentToFileCacheStrategy(){
-        ArrayList<CacheObject> cacheObjects = this.getAll();
+        List<CacheObject<K, V>> cacheObjects = this.getAll();
 
         //  sort list by frequency BUT most frequent elements MUST at the BOTTOM of the list
         cacheObjects.sort((cacheObject1, cacheObject2) -> {
@@ -319,7 +336,7 @@ public class TwoLevelCache implements Cache{
      * Moves frequent objects to memory cache
      */
     private void applyFrequentToMemoryCacheStrategy(){
-        ArrayList<CacheObject> cacheObjects = this.getAll();
+        List<CacheObject<K, V>> cacheObjects = this.getAll();
 
         //  sort list by frequency BUT most frequent elements MUST at the TOP of the list
         cacheObjects.sort((cacheObject1, cacheObject2) -> {
@@ -342,7 +359,7 @@ public class TwoLevelCache implements Cache{
      * Moves old objects to file cache
      */
     private void applyOldToFileCacheStrategy(){
-        ArrayList<CacheObject> cacheObjects = this.getAll();
+        List<CacheObject<K, V>> cacheObjects = this.getAll();
 
         //  sort list by age BUT most youngest elements MUST at the TOP of the list
         cacheObjects.sort((cacheObject1, cacheObject2) -> {
@@ -365,7 +382,7 @@ public class TwoLevelCache implements Cache{
      * Moves old objects to memory cache
      */
     private void applyOldToMemoryCacheStrategy(){
-        ArrayList<CacheObject> cacheObjects = this.getAll();
+        List<CacheObject<K, V>> cacheObjects = this.getAll();
 
         //  sort list by age BUT most youngest elements MUST at the BOTTOM of the list
         cacheObjects.sort((cacheObject1, cacheObject2) -> {
@@ -390,7 +407,7 @@ public class TwoLevelCache implements Cache{
      *
      * @param cacheObjects
      */
-    private void fillCache(ArrayList<CacheObject> cacheObjects){
+    private void fillCache(List<CacheObject<K, V>> cacheObjects){
         //  flush caches
         this.mc.flush();
         this.fc.flush();
@@ -399,7 +416,7 @@ public class TwoLevelCache implements Cache{
 //            System.out.println(cacheObject.getKey() + "\t" + cacheObject.getFrequency());
 //        }
 
-        for (CacheObject cacheObject: cacheObjects){
+        for (CacheObject<K, V> cacheObject: cacheObjects){
             if (!this.mc.put(cacheObject)){
                 //  memory cache is full
                 //  put the rest of objects to the file cache

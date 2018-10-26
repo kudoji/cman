@@ -3,7 +3,7 @@ package com.kudoji.cman.cache;
 import java.io.*;
 import java.security.MessageDigest;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 
 /**
  * Was thinking how to implement file cache mechanism.
@@ -38,7 +38,7 @@ import java.util.HashMap;
  *
  * Decided to implement 4th method.
  */
-public class FileCache implements Cache{
+public class FileCache<K, V> implements Cache<K, V>{
     //  max cache size
     //  default is zero - unlimited
     private int sizeMax;
@@ -66,8 +66,8 @@ public class FileCache implements Cache{
      * @return false than element has not been added due to cache overflow or io error(s); true - all is fine
      */
     @Override
-    public boolean put(String key, Object object) {
-        String fileName = getFileName(key);
+    public boolean put(K key, V object) {
+        String fileName = getFileName(key.toString());
         File file = new File(fileName);
         if (!file.exists()){
             if (this.sizeMax > 0 && this.size() == this.sizeMax){
@@ -79,7 +79,7 @@ public class FileCache implements Cache{
             file.delete();
         }
 
-        CacheObject cacheObject = new CacheObject(key, object);
+        CacheObject<K, V> cacheObject = new CacheObject<>(key, object);
         return saveObjectToFile(fileName, cacheObject);
     }
 
@@ -88,10 +88,11 @@ public class FileCache implements Cache{
      * @param cacheObject
      * @return
      */
-    public boolean put(CacheObject cacheObject) {
-        String key = cacheObject.getKey();
+    @Override
+    public boolean put(CacheObject<K, V> cacheObject) {
+        K key = cacheObject.getKey();
 
-        String fileName = getFileName(key);
+        String fileName = getFileName(key.toString());
         File file = new File(fileName);
         if (!file.exists()){
             if (this.sizeMax > 0 && this.size() == this.sizeMax){
@@ -112,8 +113,8 @@ public class FileCache implements Cache{
      * @return cached object or null
      */
     @Override
-    public Object get(String key) {
-        String fileName = getFileName(key);
+    public V get(K key) {
+        String fileName = getFileName(key.toString());
         File fObject = new File(fileName);
 
         if (!fObject.exists()){
@@ -121,10 +122,10 @@ public class FileCache implements Cache{
             return null;
         }
 
-        CacheObject cacheObject = readObjectFromFile(fileName);
+        CacheObject<K, V> cacheObject = readObjectFromFile(fileName);
 
         if (cacheObject != null){
-            Object object = cacheObject.getObject();
+            V object = cacheObject.getObject();
             //  need to update cache object in file cache to save frequency
             saveObjectToFile(fileName, cacheObject);
 
@@ -135,8 +136,8 @@ public class FileCache implements Cache{
     }
 
     @Override
-    public boolean delete(String key) {
-        File fObject = new File(getFileName(key));
+    public boolean delete(K key) {
+        File fObject = new File(getFileName(key.toString()));
 
         return fObject.delete();
     }
@@ -192,13 +193,13 @@ public class FileCache implements Cache{
      * @return
      */
     @Override
-    public ArrayList<CacheObject> getAll() {
-        ArrayList<CacheObject> result = new ArrayList<>();
+    public List<CacheObject<K, V>> getAll() {
+        List<CacheObject<K, V>> result = new ArrayList<>();
 
         File fDir = new File(cacheDir);
 
         for (File f: fDir.listFiles()){
-            CacheObject cacheObject = readObjectFromFile(f.getPath());
+            CacheObject<K, V> cacheObject = readObjectFromFile(f.getPath());
 
             if (cacheObject != null){
                 result.add(cacheObject);
@@ -215,32 +216,17 @@ public class FileCache implements Cache{
      * @param key
      * @return
      */
-    public boolean isKeyPresent(String key){
-        String fileName = getFileName(key);
+    @Override
+    public boolean isKeyPresent(K key){
+        String fileName = getFileName(key.toString());
         File fObject = new File(fileName);
 
         return fObject.exists();
     }
 
-    /**
-     * Returns CacheObject by key or null
-     *
-     * @param key
-     * @return
-     */
-    private CacheObject getCacheObject(String key){
-        String fileName = getFileName(key);
-        File fObject = new File(fileName);
-
-        if (!fObject.exists()){
-            return null;
-        }
-
-        return readObjectFromFile(fileName);
-    }
-
-    public long getAge(String key){
-        CacheObject cacheObject = getCacheObject(key);
+    @Override
+    public long getAge(K key){
+        CacheObject<K, V> cacheObject = getCacheObject(key);
 
         if (cacheObject == null){
             return -1;
@@ -250,8 +236,9 @@ public class FileCache implements Cache{
         return cacheObject.getAge();
     }
 
-    public int getFrequency(String key){
-        CacheObject cacheObject = getCacheObject(key);
+    @Override
+    public int getFrequency(K key){
+        CacheObject<K, V> cacheObject = getCacheObject(key);
 
         if (cacheObject == null){
             return -1;
@@ -259,6 +246,23 @@ public class FileCache implements Cache{
         }
 
         return cacheObject.getFrequency();
+    }
+
+    /**
+     * Returns CacheObject by key or null
+     *
+     * @param key
+     * @return
+     */
+    private CacheObject<K, V> getCacheObject(K key){
+        String fileName = getFileName(key.toString());
+        File fObject = new File(fileName);
+
+        if (!fObject.exists()){
+            return null;
+        }
+
+        return readObjectFromFile(fileName);
     }
 
     /**
@@ -308,7 +312,7 @@ public class FileCache implements Cache{
      * @param cacheObject
      * @return false if and only if object is not saved
      */
-    private boolean saveObjectToFile(String fileName, CacheObject cacheObject){
+    private boolean saveObjectToFile(String fileName, CacheObject<K, V> cacheObject){
         boolean isError = false;
 
         try{
@@ -319,7 +323,7 @@ public class FileCache implements Cache{
 
             oos.close();
             fos.close();
-        }catch (Exception e){
+        }catch (IOException e){
             e.printStackTrace();
             isError = true;
         }
@@ -333,18 +337,18 @@ public class FileCache implements Cache{
      * @return
      */
     @SuppressWarnings("unchecked")
-    private CacheObject readObjectFromFile(String fileName){
-        CacheObject cacheObject = null;
+    private CacheObject<K, V> readObjectFromFile(String fileName){
+        CacheObject<K, V> cacheObject = null;
 
         try{
             FileInputStream fis = new FileInputStream(fileName);
             ObjectInputStream ois = new ObjectInputStream(fis);
 
-            cacheObject = (CacheObject)ois.readObject();
+            cacheObject = (CacheObject<K, V>)ois.readObject();
 
             ois.close();
             fis.close();
-        }catch (Exception e){
+        }catch (ClassNotFoundException | IOException e){
             e.printStackTrace();
         }
 

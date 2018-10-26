@@ -3,18 +3,18 @@ package com.kudoji.cman.cache;
 import java.io.Serializable;
 
 /**
- * Wrapper over Object that need to be cached
+ * Wrapper over Object V that need to be cached
  * Should be serializable to have ability to save class' instance to file
  */
-public class CacheObject implements Serializable {
+public class CacheObject<K, V> implements Serializable {
     /**
      * Stores key
      */
-    private String key;
+    private K key;
     /**
      * Object that need to be cached
      */
-    private Object object;
+    private V object;
     /**
      * Object's frequency
      */
@@ -28,18 +28,18 @@ public class CacheObject implements Serializable {
      * Object
      * @param object
      */
-    public CacheObject(String key, Object object){
+    public CacheObject(K key, V object){
         this.key = key;
         this.object = object;
         this.frequency = 0;
         this.createTime = System.currentTimeMillis();
     }
 
-    public String getKey(){
+    public K getKey(){
         return this.key;
     }
 
-    public Object getObject(){
+    public V getObject(){
         //  increase frequency any time object getter called
         this.incFrequency();
 
