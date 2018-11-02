@@ -2,13 +2,15 @@ package com.kudoji.cman.cache;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 //  first level cache - memory
-public class MemoryCache implements Cache{
+public class MemoryCache<K, V> implements Cache<K, V>{
     //  max cache size
     //  default is zero - unlimited
     private int sizeMax;
-    private HashMap<String, CacheObject> cache;
+    private final Map<K, CacheObject<K, V>> cache;
 
     public MemoryCache(){
         this.cache = new HashMap<>();
@@ -21,13 +23,14 @@ public class MemoryCache implements Cache{
      * @param object
      * @return false than element has not been added due to cache overflow; true - all is fine
      */
-    public boolean put(String key, Object object){
+    @Override
+    public boolean put(K key, V object){
         if ((this.sizeMax > 0) && !this.cache.containsKey(key) && (this.cache.size() == this.sizeMax)){
             //  if add new element than exceed maximum limit
             return false;
         }
 
-        CacheObject cacheObject = new CacheObject(key, object);
+        CacheObject<K, V> cacheObject = new CacheObject<>(key, object);
         this.cache.put(key, cacheObject);
 
         return true;
@@ -38,8 +41,9 @@ public class MemoryCache implements Cache{
      * @param cacheObject
      * @return
      */
-    public boolean put(CacheObject cacheObject){
-        String key = cacheObject.getKey();
+    @Override
+    public boolean put(CacheObject<K, V> cacheObject){
+        K key = cacheObject.getKey();
         if ((this.sizeMax > 0) && !this.cache.containsKey(key) && (this.cache.size() == this.sizeMax)){
             //  if add new element than exceed maximum limit
             return false;
@@ -55,8 +59,9 @@ public class MemoryCache implements Cache{
      * @param key
      * @return cached object or null
      */
-    public Object get(String key){
-        CacheObject cacheObject = this.cache.get(key);
+    @Override
+    public V get(K key){
+        CacheObject<K, V> cacheObject = this.cache.get(key);
 
         if (cacheObject != null){
             return cacheObject.getObject();
@@ -70,7 +75,8 @@ public class MemoryCache implements Cache{
      * @param key
      * @return true then value deleted, false otherwise
      */
-    public boolean delete(String key){
+    @Override
+    public boolean delete(K key){
         if (this.cache.containsKey(key)){
             this.cache.remove(key);
             return true;
@@ -79,14 +85,17 @@ public class MemoryCache implements Cache{
         return false;
     }
 
+    @Override
     public void flush(){
         this.cache.clear();
     }
 
+    @Override
     public int size(){
         return this.cache.size();
     }
 
+    @Override
     public int getMaxSize(){
         return this.sizeMax;
     }
@@ -97,6 +106,7 @@ public class MemoryCache implements Cache{
      * @param value
      * @return false if size is not set, true otherwise
      */
+    @Override
     public boolean setMaxSize(int value){
         if (value < 0){
             return false;
@@ -113,7 +123,7 @@ public class MemoryCache implements Cache{
         if (cacheSize > value){
             //  max cache size is less than current cache size
             //  delete all object that are out of bound
-            ArrayList<String> cacheObjects = new ArrayList<>(this.cache.keySet());
+            ArrayList<K> cacheObjects = new ArrayList<>(this.cache.keySet());
             for (int i = value; i < cacheSize; i++){
                 this.delete(cacheObjects.get(i));
             }
@@ -126,8 +136,9 @@ public class MemoryCache implements Cache{
      * Gets all object that are in memory cache
      * @return
      */
-    public ArrayList<CacheObject> getAll(){
-        return new ArrayList<CacheObject>(this.cache.values());
+    @Override
+    public List<CacheObject<K, V>> getAll(){
+        return new ArrayList<>(this.cache.values());
     }
 
     /**
@@ -137,7 +148,8 @@ public class MemoryCache implements Cache{
      * @param key
      * @return
      */
-    public boolean isKeyPresent(String key){
+    @Override
+    public boolean isKeyPresent(K key){
         return (this.cache.get(key) != null);
     }
 
@@ -147,12 +159,13 @@ public class MemoryCache implements Cache{
      * @param key
      * @return
      */
-    private CacheObject getCacheObject(String key){
+    private CacheObject<K, V> getCacheObject(K key){
         return this.cache.get(key);
     }
 
-    public long getAge(String key){
-        CacheObject cacheObject = getCacheObject(key);
+    @Override
+    public long getAge(K key){
+        CacheObject<K, V> cacheObject = getCacheObject(key);
         if (cacheObject == null){
             return -1;
         }
@@ -160,8 +173,9 @@ public class MemoryCache implements Cache{
         return cacheObject.getAge();
     }
 
-    public int getFrequency(String key){
-        CacheObject cacheObject = getCacheObject(key);
+    @Override
+    public int getFrequency(K key){
+        CacheObject<K, V> cacheObject = getCacheObject(key);
         if (cacheObject == null){
             return -1;
         }

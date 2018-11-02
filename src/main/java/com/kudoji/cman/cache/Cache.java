@@ -1,29 +1,30 @@
 package com.kudoji.cman.cache;
 
-import java.util.ArrayList;
+import java.util.List;
 
-interface Cache {
-    boolean put(String key, Object object);
-    Object get(String key);
-    boolean delete(String key);
+interface Cache<K, V> {
+    boolean put(K key, V object);
+    boolean put(CacheObject<K, V> cacheObject);
+    V get(K key);
+    boolean delete(K key);
     void flush();
     int size();
     int getMaxSize();
     boolean setMaxSize(int value);
-    ArrayList<CacheObject> getAll();
-    boolean isKeyPresent(String key);
+    List<CacheObject<K, V>> getAll();
+    boolean isKeyPresent(K key);
 
     /**
      * Gets object's age or -1 in case of error
      * @param key
      * @return
      */
-    long getAge(String key);
+    long getAge(K key);
 
     /**
      * Gets object's usage frequency or -1 in case of error
      * @param key
      * @return
      */
-    int getFrequency(String key);
+    int getFrequency(K key);
 }

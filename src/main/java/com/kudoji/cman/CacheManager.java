@@ -1,24 +1,31 @@
 package com.kudoji.cman;
 
+import com.kudoji.cman.cache.CacheObject;
 import com.kudoji.cman.cache.FileCache;
 import com.kudoji.cman.cache.MemoryCache;
 import com.kudoji.cman.cache.TwoLevelCache;
 
+import java.util.List;
+
 public class CacheManager {
     private final static int MAX_ELEMENTS = 150;
 
-    private static void printCache(TwoLevelCache tlc, String title){
+    private static <K, V> void printCache(TwoLevelCache<K, V> tlc, String title){
         System.out.println();
         System.out.println(title);
-        for (int i = 0; i < MAX_ELEMENTS; i++){
-            String key = String.valueOf(i);
-            System.out.println("\tobject: '" + tlc.get(key) + "'\tlocation: '" + tlc.getLocation(key) +
-                    "'\tage: " + tlc.getAge(key) + "\tfreq: " + tlc.getFrequency(key));
-        }
 
+        List<CacheObject<K, V>> tlcElements = tlc.getAll();
+
+        for (CacheObject<K, V> tlcElement: tlcElements){
+            K key = tlcElement.getKey();
+            V value = tlcElement.getObject();
+            System.out.println("\tobject: '" + value + "'\tlocation: '" + tlc.getLocation(key) +
+                    "'\tage: " + tlc.getAge(key) + "\tfreq: " + tlc.getFrequency(key));
+
+        }
     }
     public static void main(String[] args){
-        FileCache fc = new FileCache();
+        FileCache<String, String> fc = new FileCache<>();
 
         System.out.println(fc.size());
 //        fc.flush();
@@ -31,14 +38,14 @@ public class CacheManager {
 
         System.out.println(fc.getAll());
 
-        MemoryCache mc = new MemoryCache();
+        MemoryCache<String, Integer> mc = new MemoryCache<>();
         mc.setMaxSize(0);
 
         mc.put("12", new Integer(123));
         mc.put("12", new Integer(1231));
         mc.put("1", new Integer(1));
         mc.put("2", new Integer(2));
-        mc.put("4", new String("sfdsfs"));
+        mc.put("4", 18);
         System.out.println(mc.get("4"));
         mc.setMaxSize(2);
 
@@ -50,7 +57,7 @@ public class CacheManager {
         System.out.println(mc.getAll());
 
         //  working with two level cache
-        TwoLevelCache tlc = new TwoLevelCache();
+        TwoLevelCache<String, String> tlc = new TwoLevelCache<>();
 
         tlc.flush();
         tlc.setMaxSizeMemoryCache(50);

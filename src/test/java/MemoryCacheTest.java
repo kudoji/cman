@@ -1,12 +1,13 @@
 import com.kudoji.cman.cache.CacheObject;
 import com.kudoji.cman.cache.MemoryCache;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 
 public class MemoryCacheTest{
-    private static MemoryCache mc;
+    private MemoryCache<String, String> mc;
+
     private static final String key1 = "key1";
     private static final String key2 = "key2";
     private static final String key3 = "key3";
@@ -14,9 +15,9 @@ public class MemoryCacheTest{
     private static final String object2 = "object2";
     private static final String object3 = "object3";
 
-    @BeforeClass
-    public static void beforeClass(){
-        mc = new MemoryCache();
+    @Before
+    public void beforeTest(){
+        this.mc = new MemoryCache<>();
     }
 
     @Test
@@ -75,6 +76,19 @@ public class MemoryCacheTest{
 
     @Test
     public void testSize(){
+        assertEquals(0, mc.size());
+
+        mc.put(key1, object1);
+        assertEquals(1, mc.size());
+
+        mc.put(key1, object2);
+        assertEquals(1, mc.size());
+
+        mc.put(key2, object1);
+        assertEquals(2, mc.size());
+
+        mc.put(key3, object3);
+        assertEquals(3, mc.size());
     }
 
     @Test

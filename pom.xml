@@ -11,10 +11,13 @@
 
     <groupId>com.kudoji.cman</groupId>
     <artifactId>cman</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>cman</name>
+    <description>Create a configurable two-level cache (for caching Objects).
+        Level 1 is memory, level 2 is filesystem.
+        Config params should let one specify the cache strategies and max sizes of level 1 and 2.</description>
 
     <dependencies>
         <dependency>
