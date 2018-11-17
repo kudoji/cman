@@ -41,14 +41,14 @@ import java.util.List;
 public class FileCache<K, V> implements Cache<K, V>{
     //  max cache size
     //  default is zero - unlimited
-    private int sizeMax;
+    private int maxSize;
     //  folder to store cache files
     private String cacheDir = ".cache";
     //  keep flag in case of error during cache folder creating
     private boolean isCacheFolderExists;
 
     public FileCache(){
-        this.sizeMax = 0;
+        this.maxSize = 0;
 
         File fDir = new File(this.cacheDir);
         //  check whether folder exists or not
@@ -70,7 +70,7 @@ public class FileCache<K, V> implements Cache<K, V>{
         String fileName = getFileName(key.toString());
         File file = new File(fileName);
         if (!file.exists()){
-            if (this.sizeMax > 0 && this.size() == this.sizeMax){
+            if (this.maxSize > 0 && this.size() == this.maxSize){
                 //  cannot add new value due to cache max size
                 return false;
             }
@@ -95,7 +95,7 @@ public class FileCache<K, V> implements Cache<K, V>{
         String fileName = getFileName(key.toString());
         File file = new File(fileName);
         if (!file.exists()){
-            if (this.sizeMax > 0 && this.size() == this.sizeMax){
+            if (this.maxSize > 0 && this.size() == this.maxSize){
                 //  cannot add new value due to cache max size
                 return false;
             }
@@ -158,29 +158,29 @@ public class FileCache<K, V> implements Cache<K, V>{
 
     @Override
     public int getMaxSize() {
-        return this.sizeMax;
+        return this.maxSize;
     }
 
     @Override
-    public void setMaxSize(int value) {
-        if (value < 0){
+    public void setMaxSize(int maxSize) {
+        if (maxSize < 0){
             throw new IllegalArgumentException("File cache maximum size must not be negative");
         }
 
-        this.sizeMax = value;
+        this.maxSize = maxSize;
 
-        if (value == 0){
+        if (maxSize == 0){
             //  unlimited cache size
             return;
         }
 
         int cacheSize = this.size();
-        if (cacheSize > value){
+        if (cacheSize > maxSize){
             //  max cache size is less than current cache size
             //  delete all object that are out of bound
             File fDir = new File(this.cacheDir);
             File[] files = fDir.listFiles();
-            for (int i = value; i < cacheSize; i++){
+            for (int i = maxSize; i < cacheSize; i++){
                 files[i].delete();
             }
         }

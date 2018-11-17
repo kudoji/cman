@@ -10,7 +10,7 @@ interface Cache<K, V> {
     void flush();
     int size();
     int getMaxSize();
-    void setMaxSize(int value);
+    void setMaxSize(int maxSize);
     List<CacheObject<K, V>> getAll();
     boolean isKeyPresent(K key);
 

@@ -9,12 +9,12 @@ import java.util.Map;
 public class MemoryCache<K, V> implements Cache<K, V>{
     //  max cache size
     //  default is zero - unlimited
-    private int sizeMax;
+    private int maxSize;
     private final Map<K, CacheObject<K, V>> cache;
 
     public MemoryCache(){
         this.cache = new HashMap<>();
-        this.sizeMax = 0;
+        this.maxSize = 0;
     }
 
     /**
@@ -25,7 +25,7 @@ public class MemoryCache<K, V> implements Cache<K, V>{
      */
     @Override
     public boolean put(K key, V object){
-        if ((this.sizeMax > 0) && !this.cache.containsKey(key) && (this.cache.size() == this.sizeMax)){
+        if ((this.maxSize > 0) && !this.cache.containsKey(key) && (this.cache.size() == this.maxSize)){
             //  if add new element than exceed maximum limit
             return false;
         }
@@ -44,7 +44,7 @@ public class MemoryCache<K, V> implements Cache<K, V>{
     @Override
     public boolean put(CacheObject<K, V> cacheObject){
         K key = cacheObject.getKey();
-        if ((this.sizeMax > 0) && !this.cache.containsKey(key) && (this.cache.size() == this.sizeMax)){
+        if ((this.maxSize > 0) && !this.cache.containsKey(key) && (this.cache.size() == this.maxSize)){
             //  if add new element than exceed maximum limit
             return false;
         }
@@ -97,34 +97,34 @@ public class MemoryCache<K, V> implements Cache<K, V>{
 
     @Override
     public int getMaxSize(){
-        return this.sizeMax;
+        return this.maxSize;
     }
 
     /**
      * Sets cache maximum size
      *
-     * @param value
+     * @param maxSize
      * @return false if size is not set, true otherwise
      */
     @Override
-    public void setMaxSize(int value){
-        if (value < 0){
+    public void setMaxSize(int maxSize){
+        if (maxSize < 0){
             throw new IllegalArgumentException("Memory cache size must not be negative");
         }
 
-        this.sizeMax = value;
+        this.maxSize = maxSize;
 
-        if (value == 0){
+        if (maxSize == 0){
             //  unlimited cache size
             return;
         }
 
         int cacheSize = this.size();
-        if (cacheSize > value){
+        if (cacheSize > maxSize){
             //  max cache size is less than current cache size
             //  delete all object that are out of bound
             ArrayList<K> cacheObjects = new ArrayList<>(this.cache.keySet());
-            for (int i = value; i < cacheSize; i++){
+            for (int i = maxSize; i < cacheSize; i++){
                 this.delete(cacheObjects.get(i));
             }
         }

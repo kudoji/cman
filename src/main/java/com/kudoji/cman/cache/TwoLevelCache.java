@@ -192,8 +192,6 @@ public class TwoLevelCache<K, V> implements Cache<K, V>{
             throw new IllegalArgumentException("Two-level cache size must not be negative");
         }
 
-        boolean result = false;
-
         int maxSizeMemoryCache = value / 2;
 
         try{
