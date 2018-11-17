@@ -1,7 +1,10 @@
 import com.kudoji.cman.cache.CacheObject;
 import com.kudoji.cman.cache.MemoryCache;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
 import static org.junit.Assert.*;
 
 
@@ -34,15 +37,15 @@ public class MemoryCacheTest{
         assertTrue(mc.put(key2, object2));
         assertEquals(2, mc.size());
 
-        assertTrue(mc.setMaxSize(1));
+        mc.setMaxSize(1);
         assertEquals(1, mc.size());
 
-        CacheObject cacheObject = new CacheObject(key1, object1);
+        CacheObject<String, String> cacheObject = new CacheObject<>(key1, object1);
 
         assertTrue(mc.put(cacheObject));
         assertEquals(1, mc.size());
 
-        cacheObject = new CacheObject(key2, object2);
+        cacheObject = new CacheObject<>(key2, object2);
         assertFalse(mc.put(cacheObject));
         assertEquals(1, mc.size());
 
@@ -91,12 +94,9 @@ public class MemoryCacheTest{
         assertEquals(3, mc.size());
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void testSetMaxSize(){
-        assertFalse(mc.setMaxSize(-2));
-
-        assertTrue(mc.setMaxSize(0));
-        assertTrue(mc.setMaxSize(4));
+        mc.setMaxSize(-2);
     }
 
     @Test

@@ -162,16 +162,16 @@ public class FileCache<K, V> implements Cache<K, V>{
     }
 
     @Override
-    public boolean setMaxSize(int value) {
+    public void setMaxSize(int value) {
         if (value < 0){
-            return false;
+            throw new IllegalArgumentException("File cache maximum size must not be negative");
         }
 
         this.sizeMax = value;
 
         if (value == 0){
             //  unlimited cache size
-            return true;
+            return;
         }
 
         int cacheSize = this.size();
@@ -184,8 +184,6 @@ public class FileCache<K, V> implements Cache<K, V>{
                 files[i].delete();
             }
         }
-
-        return true;
     }
 
     /**

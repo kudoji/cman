@@ -107,16 +107,16 @@ public class MemoryCache<K, V> implements Cache<K, V>{
      * @return false if size is not set, true otherwise
      */
     @Override
-    public boolean setMaxSize(int value){
+    public void setMaxSize(int value){
         if (value < 0){
-            return false;
+            throw new IllegalArgumentException("Memory cache size must not be negative");
         }
 
         this.sizeMax = value;
 
         if (value == 0){
             //  unlimited cache size
-            return true;
+            return;
         }
 
         int cacheSize = this.size();
@@ -128,8 +128,6 @@ public class MemoryCache<K, V> implements Cache<K, V>{
                 this.delete(cacheObjects.get(i));
             }
         }
-
-        return true;
     }
 
     /**

@@ -187,29 +187,31 @@ public class TwoLevelCache<K, V> implements Cache<K, V>{
      * @return
      */
     @Override
-    public boolean setMaxSize(int value) {
-        if (value <= 0) return false;
+    public void setMaxSize(int value) {
+        if (value <= 0){
+            throw new IllegalArgumentException("Two-level cache size must not be negative");
+        }
 
         boolean result = false;
 
         int maxSizeMemoryCache = value / 2;
 
-        result = this.mc.setMaxSize(maxSizeMemoryCache);
-
-        if (!result){
-            //  max size for memory cache set successfully
-            result = this.fc.setMaxSize(value - maxSizeMemoryCache); // rest goes to file cache
+        try{
+            this.mc.setMaxSize(maxSizeMemoryCache);
+        }catch (IllegalArgumentException e){
+            return;
         }
 
-        return result;
+        //  max size for memory cache set successfully
+        this.fc.setMaxSize(value - maxSizeMemoryCache); // rest goes to file cache
     }
 
-    public boolean setMaxSizeMemoryCache(int value){
-        return this.mc.setMaxSize(value);
+    public void setMaxSizeMemoryCache(int value){
+        this.mc.setMaxSize(value);
     }
 
-    public boolean setMaxSizeFileCache(int value){
-        return this.fc.setMaxSize(value);
+    public void setMaxSizeFileCache(int value){
+        this.fc.setMaxSize(value);
     }
 
     /**
